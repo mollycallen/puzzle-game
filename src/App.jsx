@@ -15,8 +15,10 @@ function App () {
   const [tiles, setTiles] = useState([])
   const [isGameActive, setIsGameActive] = useState(false)
   const [time, setTime] = useState(0)
+  const [moves, setMoves] = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
   const [isImageLoading, setIsImageLoading] = useState(true)
+  const [isShuffled, setIsShuffled] = useState(false)
 
   // Refs for timer and drag state
   const timerInterval = useRef(null)
@@ -86,6 +88,8 @@ function App () {
     originalPositions.current = newTiles.map(tile => tile.position)
     setIsGameActive(false)
     setTime(0)
+    setMoves(0)
+    setIsShuffled(false)
   }
 
   // Memoize these functions to prevent unnecessary re-renders
@@ -93,7 +97,9 @@ function App () {
     setCurrentImageId(Math.floor(Math.random() * 1000))
     setIsGameActive(false)
     setTime(0)
+    setMoves(0)
     setShowSuccess(false)
+    setIsShuffled(false)
   }, [])
 
   const shuffleTiles = useCallback(() => {
@@ -116,7 +122,24 @@ function App () {
     setTiles(newTiles)
     setIsGameActive(true)
     setTime(0)
+    setMoves(0)
+    setIsShuffled(true)
   }, [tiles, isImageLoading])
+
+  const resetPuzzle = useCallback(() => {
+    // Reset to original positions
+    const newTiles = tiles.map((tile, index) => ({
+      ...tile,
+      position: originalPositions.current[index]
+    }))
+
+    setTiles(newTiles)
+    setIsGameActive(false)
+    setTime(0)
+    setMoves(0)
+    setIsShuffled(false)
+    setShowSuccess(false)
+  }, [tiles])
 
   const handleGridSizeChange = useCallback(newSize => {
     setGridSize(newSize)
@@ -169,6 +192,8 @@ function App () {
         newTiles[targetIndex].position = temp
 
         setTiles(newTiles)
+        // Increment moves counter only when a move is made
+        setMoves(prevMoves => prevMoves + 1)
       }
     },
     [tiles]
@@ -192,10 +217,12 @@ function App () {
           onGridSizeChange={handleGridSizeChange}
           onNewImage={getNewImage}
           onShuffle={shuffleTiles}
+          onReset={resetPuzzle}
           disabled={isImageLoading}
+          isShuffled={isShuffled}
         />
 
-        <Timer time={time} />
+        <Timer time={time} moves={moves} />
       </div>
       <GameBoard
         gridSize={gridSize}
@@ -210,6 +237,7 @@ function App () {
       <SuccessMessage
         show={showSuccess}
         time={time}
+        moves={moves}
         onPlayAgain={getNewImage}
       />
     </div>

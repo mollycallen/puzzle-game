@@ -5,7 +5,9 @@ function Controls ({
   onGridSizeChange,
   onNewImage,
   onShuffle,
-  disabled
+  onReset,
+  disabled,
+  isShuffled
 }) {
   return (
     <div className='controls'>
@@ -72,6 +74,29 @@ function Controls ({
           <line x1='4' y1='4' x2='9' y2='9'></line>
         </svg>
         Shuffle
+      </button>
+
+      <button
+        className='btn-light'
+        onClick={onReset}
+        disabled={disabled || !isShuffled}
+        aria-label='Reset puzzle to original state'
+      >
+        <svg
+          xmlns='http://www.w3.org/2000/svg'
+          width='16'
+          height='16'
+          viewBox='0 0 24 24'
+          fill='none'
+          stroke='currentColor'
+          strokeWidth='2'
+          strokeLinecap='round'
+          strokeLinejoin='round'
+        >
+          <path d='M3 2v6h6'></path>
+          <path d='m3 13a9 9 0 1 0 3-7.7l-3 3.7z'></path>
+        </svg>
+        Reset
       </button>
     </div>
   )

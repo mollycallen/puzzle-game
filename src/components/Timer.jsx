@@ -1,6 +1,6 @@
 import { memo } from 'react'
 
-function Timer ({ time }) {
+function Timer ({ time, moves }) {
   // Format time as mm:ss
   const formatTime = () => {
     const minutes = Math.floor(time / 60)
@@ -11,9 +11,15 @@ function Timer ({ time }) {
   }
 
   return (
-    <div className='timer-container'>
-      <div className='timer-label'>Elapsed Time</div>
-      <div className='timer'>{formatTime()}</div>
+    <div className='timer-and-moves'>
+      <div className='timer-container'>
+        <div className='timer-label'>Elapsed Time</div>
+        <div className='timer'>{formatTime()}</div>
+      </div>
+      <div className='moves-container'>
+        <div className='moves-label'>Moves</div>
+        <div className='moves'>{moves || 0}</div>
+      </div>
     </div>
   )
 }

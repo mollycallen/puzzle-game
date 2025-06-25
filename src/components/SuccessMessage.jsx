@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 
-function SuccessMessage ({ show, time, onPlayAgain }) {
+function SuccessMessage ({ show, time, moves, onPlayAgain }) {
   // Format time as mm:ss
   const formatTime = () => {
     const minutes = Math.floor(time / 60)
@@ -51,6 +51,10 @@ function SuccessMessage ({ show, time, onPlayAgain }) {
         <div className='success-stat'>
           <div className='success-stat-value'>{formatTime()}</div>
           <div className='success-stat-label'>Time</div>
+        </div>
+        <div className='success-stat'>
+          <div className='success-stat-value'>{moves}</div>
+          <div className='success-stat-label'>Moves</div>
         </div>
       </div>
 

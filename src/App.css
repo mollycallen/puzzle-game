@@ -142,17 +142,28 @@
   cursor: not-allowed;
 }
 
-/* Enhanced Timer */
-.timer-container {
+/* Enhanced Timer and Moves Display */
+.timer-and-moves {
+  display: flex;
+  gap: 1rem;
   margin-bottom: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.timer-container,
+.moves-container {
   text-align: center;
   padding: 0.75rem 1.5rem;
   background-color: white;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
+  min-width: 120px;
 }
 
-.timer-label {
+.timer-label,
+.moves-label {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 1px;
@@ -160,11 +171,16 @@
   margin-bottom: 0.25rem;
 }
 
-.timer {
+.timer,
+.moves {
   font-family: 'Roboto Mono', monospace;
   font-size: 1.5rem;
   font-weight: 500;
   color: var(--gray-800);
+}
+
+.moves {
+  color: var(--primary);
 }
 
 /* Enhanced Game Board */
@@ -384,9 +400,32 @@
   .app-title {
     font-size: 2rem;
   }
+
+  .timer-and-moves {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .timer-container,
+  .moves-container {
+    min-width: 100px;
+    padding: 0.5rem 1rem;
+  }
+
+  .timer,
+  .moves {
+    font-size: 1.2rem;
+  }
+
+  .controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .controls button {
+    max-width: 200px;
+  }
 }
-
-
 
 /* Utility classes */
 .visually-hidden {
