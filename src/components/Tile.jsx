@@ -1,7 +1,11 @@
 import { memo } from 'react'
 
-function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop }) {
+function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop, disabled }) {
   const handleDragStart = e => {
+    if (disabled) {
+      e.preventDefault()
+      return
+    }
     e.dataTransfer.setData('text/plain', '') // Required for Firefox
     e.target.classList.add('dragging')
     onDragStart(id)
@@ -17,7 +21,9 @@ function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop }) {
   }
 
   const handleDragEnter = e => {
-    e.target.classList.add('drag-over')
+    if (!disabled) {
+      e.target.classList.add('drag-over')
+    }
   }
 
   const handleDragLeave = e => {
@@ -27,7 +33,9 @@ function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop }) {
   const handleDrop = e => {
     e.preventDefault()
     e.target.classList.remove('drag-over')
-    onDrop(id)
+    if (!disabled) {
+      onDrop(id)
+    }
   }
 
   return (
@@ -37,7 +45,7 @@ function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop }) {
         backgroundPosition: position,
         backgroundImage: `url(${imageUrl})`
       }}
-      draggable
+      draggable={!disabled}
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
       onDragOver={handleDragOver}

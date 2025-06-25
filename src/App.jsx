@@ -3,6 +3,7 @@ import Controls from './components/Controls'
 import Timer from './components/Timer'
 import SuccessMessage from './components/SuccessMessage'
 import GameBoard from './components/GameBoard'
+import LoadingModal from './components/LoadingModal'
 import './App.css'
 
 function App () {
@@ -15,6 +16,7 @@ function App () {
   const [isGameActive, setIsGameActive] = useState(false)
   const [time, setTime] = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
+  const [isImageLoading, setIsImageLoading] = useState(true)
 
   // Refs for timer and drag state
   const timerInterval = useRef(null)
@@ -44,6 +46,24 @@ function App () {
   useEffect(() => {
     initializeTiles()
   }, [gridSize, currentImageId])
+
+  // Preload image when currentImageId changes
+  useEffect(() => {
+    setIsImageLoading(true)
+    const imageUrl = `https://picsum.photos/id/${currentImageId}/600`
+    const img = new Image()
+    
+    img.onload = () => {
+      setIsImageLoading(false)
+    }
+    
+    img.onerror = () => {
+      // If image fails to load, try a different ID
+      setCurrentImageId(Math.floor(Math.random() * 1000))
+    }
+    
+    img.src = imageUrl
+  }, [currentImageId])
 
   // Initialize tiles with background positions
   const initializeTiles = () => {
@@ -76,6 +96,9 @@ function App () {
   }, [])
 
   const shuffleTiles = useCallback(() => {
+    // Don't shuffle if image is still loading
+    if (isImageLoading) return
+    
     const positions = [...originalPositions.current]
     let shuffledPositions
 
@@ -92,7 +115,7 @@ function App () {
     setTiles(newTiles)
     setIsGameActive(true)
     setTime(0)
-  }, [tiles])
+  }, [tiles, isImageLoading])
 
   const handleGridSizeChange = useCallback(newSize => {
     setGridSize(newSize)
@@ -154,11 +177,14 @@ function App () {
 
   return (
     <div className='app-container'>
+      <LoadingModal isLoading={isImageLoading} />
+      
       <Controls
         gridSize={gridSize}
         onGridSizeChange={handleGridSizeChange}
         onNewImage={getNewImage}
         onShuffle={shuffleTiles}
+        disabled={isImageLoading}
       />
 
       <Timer time={time} />
@@ -170,6 +196,7 @@ function App () {
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
         onDrop={handleDrop}
+        disabled={isImageLoading}
       />
 
       <SuccessMessage show={showSuccess} />

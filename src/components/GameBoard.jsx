@@ -6,11 +6,12 @@ function GameBoard ({
   imageUrl,
   onDragStart,
   onDragEnd,
-  onDrop
+  onDrop,
+  disabled
 }) {
   return (
     <div
-      className='grid-container'
+      className={`grid-container ${disabled ? 'disabled' : ''}`}
       style={{
         gridTemplateColumns: `repeat(${gridSize}, 1fr)`,
         gridTemplateRows: `repeat(${gridSize}, 1fr)`
@@ -25,6 +26,7 @@ function GameBoard ({
           onDragStart={onDragStart}
           onDragEnd={onDragEnd}
           onDrop={onDrop}
+          disabled={disabled}
         />
       ))}
     </div>
