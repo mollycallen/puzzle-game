@@ -52,16 +52,16 @@ function App () {
     setIsImageLoading(true)
     const imageUrl = `https://picsum.photos/id/${currentImageId}/600`
     const img = new Image()
-    
+
     img.onload = () => {
       setIsImageLoading(false)
     }
-    
+
     img.onerror = () => {
       // If image fails to load, try a different ID
       setCurrentImageId(Math.floor(Math.random() * 1000))
     }
-    
+
     img.src = imageUrl
   }, [currentImageId])
 
@@ -88,17 +88,18 @@ function App () {
     setTime(0)
   }
 
-  // Memoize these functions to prevent unnecessary re-renders of Controls
+  // Memoize these functions to prevent unnecessary re-renders
   const getNewImage = useCallback(() => {
     setCurrentImageId(Math.floor(Math.random() * 1000))
     setIsGameActive(false)
     setTime(0)
+    setShowSuccess(false)
   }, [])
 
   const shuffleTiles = useCallback(() => {
     // Don't shuffle if image is still loading
     if (isImageLoading) return
-    
+
     const positions = [...originalPositions.current]
     let shuffledPositions
 
@@ -119,6 +120,7 @@ function App () {
 
   const handleGridSizeChange = useCallback(newSize => {
     setGridSize(newSize)
+    setShowSuccess(false)
   }, [])
 
   // Check if puzzle is solved - memoized since it's used in handleDragEnd
@@ -147,7 +149,6 @@ function App () {
     if (checkIfSolved()) {
       setIsGameActive(false)
       setShowSuccess(true)
-      setTimeout(() => setShowSuccess(false), 3000)
     }
 
     draggedTileId.current = null
@@ -177,18 +178,25 @@ function App () {
 
   return (
     <div className='app-container'>
+      <div className='app-header'>
+        <h1 className='app-title'>Image Puzzle</h1>
+        <p className='app-subtitle'>
+          Drag and drop the tiles to solve the puzzle
+        </p>
+      </div>
+
       <LoadingModal isLoading={isImageLoading} />
-      
-      <Controls
-        gridSize={gridSize}
-        onGridSizeChange={handleGridSizeChange}
-        onNewImage={getNewImage}
-        onShuffle={shuffleTiles}
-        disabled={isImageLoading}
-      />
+      <div>
+        <Controls
+          gridSize={gridSize}
+          onGridSizeChange={handleGridSizeChange}
+          onNewImage={getNewImage}
+          onShuffle={shuffleTiles}
+          disabled={isImageLoading}
+        />
 
-      <Timer time={time} />
-
+        <Timer time={time} />
+      </div>
       <GameBoard
         gridSize={gridSize}
         tiles={tiles}
@@ -199,7 +207,11 @@ function App () {
         disabled={isImageLoading}
       />
 
-      <SuccessMessage show={showSuccess} />
+      <SuccessMessage
+        show={showSuccess}
+        time={time}
+        onPlayAgain={getNewImage}
+      />
     </div>
   )
 }
