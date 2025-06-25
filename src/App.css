@@ -1,0 +1,125 @@
+.app-container {
+  margin: 0;
+  padding: 0;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f0f0f0;
+}
+
+.controls {
+  margin-bottom: 20px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.controls select,
+.controls button {
+  padding: 8px 12px;
+  font-size: 16px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.controls select {
+  border: 1px solid #ccc;
+}
+
+.controls button {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  transition: background-color 0.2s;
+}
+
+.controls button:hover {
+  background-color: #3e8e41;
+}
+
+.timer-container {
+  margin-top: 10px;
+  margin-bottom: 15px;
+  text-align: center;
+  font-size: 24px;
+  font-family: "Courier New", monospace;
+}
+
+.timer {
+  display: inline-block;
+  background-color: #333;
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 4px;
+  min-width: 120px;
+}
+
+.grid-container {
+  position: relative;
+  width: 600px;
+  height: 600px;
+  display: grid;
+  gap: 2px;
+  overflow: hidden;
+  background: #333;
+}
+
+.tile {
+  width: 100%;
+  height: 100%;
+  background-size: 600px 600px;
+  background-repeat: no-repeat;
+  overflow: hidden;
+  cursor: grab;
+  transition: opacity 0.2s;
+}
+
+.tile:active {
+  cursor: grabbing;
+}
+
+.tile.dragging {
+  opacity: 0.5;
+}
+
+.tile.drag-over {
+  border: 2px solid #00ff00;
+  box-sizing: border-box;
+}
+
+.success-message {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(0, 128, 0, 0.8);
+  color: white;
+  padding: 20px;
+  border-radius: 10px;
+  font-size: 24px;
+  font-weight: bold;
+  z-index: 100;
+  text-align: center;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.5s, visibility 0.5s;
+}
+
+.success-message.show {
+  opacity: 1;
+  visibility: visible;
+  animation: fadeOut 0.5s 2.5s forwards;
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
