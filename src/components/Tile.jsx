@@ -1,6 +1,15 @@
 import { memo } from 'react'
 
-function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop, disabled }) {
+function Tile ({
+  id,
+  position,
+  imageUrl,
+  onDragStart,
+  onDragEnd,
+  onDrop,
+  disabled,
+  hintType
+}) {
   const handleDragStart = e => {
     if (disabled) {
       e.preventDefault()
@@ -38,9 +47,17 @@ function Tile ({ id, position, imageUrl, onDragStart, onDragEnd, onDrop, disable
     }
   }
 
+  // Build class name based on hint type
+  const getClassName = () => {
+    let className = 'tile'
+    if (hintType === 'source') className += ' tile-hint-source'
+    if (hintType === 'destination') className += ' tile-hint-destination'
+    return className
+  }
+
   return (
     <div
-      className='tile'
+      className={getClassName()}
       style={{
         backgroundPosition: position,
         backgroundImage: `url(${imageUrl})`

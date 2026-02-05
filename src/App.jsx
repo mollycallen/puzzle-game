@@ -1,205 +1,155 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect } from 'react'
 import Controls from './components/Controls'
 import Timer from './components/Timer'
 import SuccessMessage from './components/SuccessMessage'
 import GameBoard from './components/GameBoard'
 import LoadingModal from './components/LoadingModal'
+import HintButton from './components/HintButton'
+
+import { useImageLoader } from './hooks/useImageLoader'
+import { useGameTimer } from './hooks/useGameTimer'
+import { useHint } from './hooks/useHint'
+import {
+  createTiles,
+  shufflePositions,
+  applyShuffledPositions,
+  resetTilePositions,
+  swapTilePositions,
+  checkIsSolved
+} from './utils/puzzleUtils'
+
 import './App.css'
 
 function App () {
-  // State management
+  // Grid and tile state
   const [gridSize, setGridSize] = useState(3)
-  const [currentImageId, setCurrentImageId] = useState(
-    Math.floor(Math.random() * 1000)
-  )
   const [tiles, setTiles] = useState([])
   const [isGameActive, setIsGameActive] = useState(false)
-  const [time, setTime] = useState(0)
   const [moves, setMoves] = useState(0)
   const [showSuccess, setShowSuccess] = useState(false)
-  const [isImageLoading, setIsImageLoading] = useState(true)
   const [isShuffled, setIsShuffled] = useState(false)
 
-  // Refs for timer and drag state
-  const timerInterval = useRef(null)
+  // Refs
   const draggedTileId = useRef(null)
   const originalPositions = useRef([])
 
-  // Timer logic
-  useEffect(() => {
-    if (isGameActive) {
-      timerInterval.current = setInterval(() => {
-        setTime(prevTime => prevTime + 1)
-      }, 1000)
-    } else {
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current)
-      }
-    }
-
-    return () => {
-      if (timerInterval.current) {
-        clearInterval(timerInterval.current)
-      }
-    }
-  }, [isGameActive])
+  // Custom hooks
+  const { imageUrl, isLoading: isImageLoading, loadNewImage } = useImageLoader()
+  const { time, resetTimer, restartTimer, stopTimer } = useGameTimer()
+  const { hintSource, hintDestination, showHint, clearHints } = useHint()
 
   // Initialize tiles when grid size or image changes
   useEffect(() => {
-    initializeTiles()
-  }, [gridSize, currentImageId])
-
-  // Preload image when currentImageId changes
-  useEffect(() => {
-    setIsImageLoading(true)
-    const imageUrl = `https://picsum.photos/id/${currentImageId}/600`
-    const img = new Image()
-
-    img.onload = () => {
-      setIsImageLoading(false)
-    }
-
-    img.onerror = () => {
-      // If image fails to load, try a different ID
-      setCurrentImageId(Math.floor(Math.random() * 1000))
-    }
-
-    img.src = imageUrl
-  }, [currentImageId])
-
-  // Initialize tiles with background positions
-  const initializeTiles = () => {
-    const tileSize = 600 / gridSize
-    const newTiles = []
-
-    for (let row = 0; row < gridSize; row++) {
-      for (let col = 0; col < gridSize; col++) {
-        const xOffset = -col * tileSize
-        const yOffset = -row * tileSize
-
-        newTiles.push({
-          id: `${row}-${col}`,
-          position: `${xOffset}px ${yOffset}px`
-        })
-      }
-    }
-
+    const newTiles = createTiles(gridSize)
     setTiles(newTiles)
     originalPositions.current = newTiles.map(tile => tile.position)
     setIsGameActive(false)
-    setTime(0)
     setMoves(0)
     setIsShuffled(false)
-  }
+    resetTimer()
+    clearHints()
+  }, [gridSize, imageUrl, resetTimer, clearHints])
 
-  // Memoize these functions to prevent unnecessary re-renders
-  const getNewImage = useCallback(() => {
-    setCurrentImageId(Math.floor(Math.random() * 1000))
+  // Handle new image
+  const handleNewImage = useCallback(() => {
+    loadNewImage()
     setIsGameActive(false)
-    setTime(0)
     setMoves(0)
     setShowSuccess(false)
     setIsShuffled(false)
-  }, [])
+    resetTimer()
+    clearHints()
+  }, [loadNewImage, resetTimer, clearHints])
 
-  const shuffleTiles = useCallback(() => {
-    // Don't shuffle if image is still loading
+  // Handle shuffle
+  const handleShuffle = useCallback(() => {
     if (isImageLoading) return
 
-    const positions = [...originalPositions.current]
-    let shuffledPositions
-
-    // Make sure the shuffle actually changes positions
-    do {
-      shuffledPositions = [...positions].sort(() => Math.random() - 0.5)
-    } while (shuffledPositions.every((pos, idx) => pos === positions[idx]))
-
-    const newTiles = tiles.map((tile, index) => ({
-      ...tile,
-      position: shuffledPositions[index]
-    }))
+    const shuffledPositions = shufflePositions(originalPositions.current)
+    const newTiles = applyShuffledPositions(tiles, shuffledPositions)
 
     setTiles(newTiles)
     setIsGameActive(true)
-    setTime(0)
     setMoves(0)
     setIsShuffled(true)
-  }, [tiles, isImageLoading])
+    restartTimer()
+    clearHints()
+  }, [tiles, isImageLoading, restartTimer, clearHints])
 
-  const resetPuzzle = useCallback(() => {
-    // Reset to original positions
-    const newTiles = tiles.map((tile, index) => ({
-      ...tile,
-      position: originalPositions.current[index]
-    }))
+  // Handle reset
+  const handleReset = useCallback(() => {
+    const newTiles = resetTilePositions(tiles, originalPositions.current)
 
     setTiles(newTiles)
     setIsGameActive(false)
-    setTime(0)
     setMoves(0)
     setIsShuffled(false)
     setShowSuccess(false)
-  }, [tiles])
+    resetTimer()
+    clearHints()
+  }, [tiles, resetTimer, clearHints])
 
-  const handleGridSizeChange = useCallback(newSize => {
-    setGridSize(newSize)
-    setShowSuccess(false)
-  }, [])
+  // Handle grid size change
+  const handleGridSizeChange = useCallback(
+    newSize => {
+      setGridSize(newSize)
+      setShowSuccess(false)
+      clearHints()
+    },
+    [clearHints]
+  )
 
-  // Check if puzzle is solved - memoized since it's used in handleDragEnd
-  const checkIfSolved = useCallback(() => {
-    if (!isGameActive) return false
+  // Handle hint
+  const handleHint = useCallback(() => {
+    if (!isGameActive) return
+    showHint(tiles, originalPositions.current)
+  }, [isGameActive, tiles, showHint])
 
-    return tiles.every(
-      (tile, index) => tile.position === originalPositions.current[index]
-    )
-  }, [isGameActive, tiles])
-
-  // Memoize drag handlers to prevent tile re-renders
+  // Handle drag start
   const handleDragStart = useCallback(
     tileId => {
       const tileIndex = tiles.findIndex(tile => tile.id === tileId)
       draggedTileId.current = tileIndex
+      clearHints()
     },
-    [tiles]
+    [tiles, clearHints]
   )
 
+  // Handle drag end
   const handleDragEnd = useCallback(() => {
     // Remove drag-over class from all tiles
     const allTiles = document.querySelectorAll('.tile')
     allTiles.forEach(tile => tile.classList.remove('drag-over'))
 
-    if (checkIfSolved()) {
+    if (isGameActive && checkIsSolved(tiles, originalPositions.current)) {
       setIsGameActive(false)
       setShowSuccess(true)
+      stopTimer()
+      clearHints()
     }
 
     draggedTileId.current = null
-  }, [checkIfSolved])
+  }, [isGameActive, tiles, stopTimer, clearHints])
 
+  // Handle drop
   const handleDrop = useCallback(
     targetTileId => {
       if (draggedTileId.current === null) return
 
-      const newTiles = [...tiles]
       const targetIndex = tiles.findIndex(tile => tile.id === targetTileId)
 
       if (draggedTileId.current !== targetIndex) {
-        // Swap positions
-        const temp = newTiles[draggedTileId.current].position
-        newTiles[draggedTileId.current].position =
-          newTiles[targetIndex].position
-        newTiles[targetIndex].position = temp
-
+        const newTiles = swapTilePositions(
+          tiles,
+          draggedTileId.current,
+          targetIndex
+        )
         setTiles(newTiles)
-        // Increment moves counter only when a move is made
         setMoves(prevMoves => prevMoves + 1)
       }
     },
     [tiles]
   )
-
-  const imageUrl = `https://picsum.photos/id/${currentImageId}/600`
 
   return (
     <div className='app-container'>
@@ -211,19 +161,26 @@ function App () {
       </div>
 
       <LoadingModal isLoading={isImageLoading} />
+
       <div>
         <Controls
           gridSize={gridSize}
           onGridSizeChange={handleGridSizeChange}
-          onNewImage={getNewImage}
-          onShuffle={shuffleTiles}
-          onReset={resetPuzzle}
+          onNewImage={handleNewImage}
+          onShuffle={handleShuffle}
+          onReset={handleReset}
           disabled={isImageLoading}
           isShuffled={isShuffled}
         />
 
         <Timer time={time} moves={moves} />
       </div>
+
+      <HintButton
+        onHint={handleHint}
+        disabled={!isGameActive || isImageLoading}
+      />
+
       <GameBoard
         gridSize={gridSize}
         tiles={tiles}
@@ -232,13 +189,15 @@ function App () {
         onDragEnd={handleDragEnd}
         onDrop={handleDrop}
         disabled={isImageLoading}
+        hintSource={hintSource}
+        hintDestination={hintDestination}
       />
 
       <SuccessMessage
         show={showSuccess}
         time={time}
         moves={moves}
-        onPlayAgain={getNewImage}
+        onPlayAgain={handleNewImage}
       />
     </div>
   )
